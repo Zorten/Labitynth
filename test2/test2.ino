@@ -1,6 +1,6 @@
 #include "LedControl.h"
 #include "Levels.h"
-const int button = 9;
+const int button = 4;
 int buttonState = 0;
 
 void player(int row, int col){

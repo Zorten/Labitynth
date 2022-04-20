@@ -8,14 +8,15 @@ int initCol = 0;
 int initRow = 3;
 int currCol = 0;
 int currRow = 3;
+int litUp = 0;
 
 //   Buttons
 const int up1 = 9;
-const int up2 = 9;
-const int right1 = 9;
-const int right2 = 9;
-const int down1 = 9;
-const int down2 = 9;
+const int up2 = 8;
+const int right1 = 7;
+const int right2 = 6;
+const int down1 = 5;
+const int down2 = 4;
 
 //Moves possible 
 const int moveUp1 = 1;
@@ -24,6 +25,14 @@ const int moveRight1 = 1;
 const int moveRight2 = 1;
 const int moveDown1 = 1;
 const int moveDown2 = 1;
+
+//flags for seeing which move to do 
+bool goUp1 = 0;
+bool goUp2 = 0;
+bool goRight1 = 0;
+bool goRight2 = 0;
+bool goDown1 = 0;
+bool goDown2 = 0;
 
 
 //===HELPING FUNCTIONS===//
@@ -37,26 +46,64 @@ void player(int row, int col){
 }
 
 //===STATE MACHINE FUNCTIONS===//
+
+//This state machine will wait for and capture user input on the buttons
+//and then moves the LED on the maze accordingly, restarting if wall was hit
 enum Button_States { Button_SMStart, Button_waitPress, Button_waitRelease, Button_check} state;
 void TickFct_Button(){
   switch(state) { // Transitions
      case Button_SMStart: // Initial transition
         state = Button_waitPress;
         break;
+        
      case Button_waitPress:
-        if (digitalRead(right1) == LOW){
+        if ((digitalRead(right1) == LOW) && (digitalRead(up1) == LOW) && (digitalRead(down1) == LOW) ){
           state = Button_waitPress;  
         }
-        else{
-          state = Button_waitRelease;  
-        }
-        break;
-     case Button_waitRelease:
-        if(digitalRead(right1) == HIGH){
+        else if ((digitalRead(right1) == HIGH)){
+          goRight1 = 1;
           state = Button_waitRelease; 
         }
+        else if ((digitalRead(up1) == HIGH)){
+          goUp1 = 1;
+          state = Button_waitRelease;  
+        }
+        else if ((digitalRead(down1) == HIGH)){
+          goDown1 = 1;
+          state = Button_waitRelease;  
+        }
         else{
-          state = Button_check;  
+          state = Button_waitPress;
+        }
+        break;
+        
+     case Button_waitRelease:
+        if (goUp1){
+          if (digitalRead(up1) == HIGH){
+            state = Button_waitRelease;  
+          }
+          else{
+            state = Button_check;
+          }
+        }
+        else if (goRight1){
+          if (digitalRead(right1) == HIGH){
+            state = Button_waitRelease;  
+          }
+          else{
+            state = Button_check; 
+          }
+        }
+        else if (goDown1){
+          if (digitalRead(down1) == HIGH){
+            state = Button_waitRelease;  
+          }
+          else{
+            state = Button_check;
+          }
+        }
+        else{
+            
         }
         break;
 
@@ -69,13 +116,41 @@ void TickFct_Button(){
 
   switch(state) { // State actions
      case Button_check:
-        if (lc.getLed(currRow, currCol + moveRight1)){
-          currCol = initCol;
-          currRow = initRow;
+        if (goUp1){
+          litUp = lc.getLed(currRow - moveUp1, currCol);
+          if (litUp){
+            currCol = initCol;
+            currRow = initRow;
+          }
+          else{
+            currCol = currCol;
+            currRow = currRow - moveUp1;  
+          }
+          goUp1 = 0;
         }
-        else{
-          currCol += moveRight1;
-          currRow = currRow;  
+        else if (goRight1){
+         // litUp = ;
+          if (lc.getLed(currRow, currCol + moveRight1)){
+            currCol = initCol;
+            currRow = initRow;
+          }
+          else{
+            currCol += moveRight1;
+            currRow = currRow;  
+          } 
+          goRight1 = 0;
+        } 
+        else if (goDown1){
+          litUp = lc.getLed(currRow + moveDown1, currCol);
+          if (litUp){
+            currCol = initCol;
+            currRow = initRow;
+          }
+          else{
+            currCol = currCol;
+            currRow += moveDown1;  
+          }
+          goDown1 = 0;
         }
         break;
      default:
@@ -88,7 +163,7 @@ void TickFct_Button(){
 //===SETUP===//
 void setup() {
   // put your setup code here, to run once:
-  //Serial.begin(9600);
+  Serial.begin(9600);
   // Make sure display is not in shutdown mode
   lc.shutdown(0,false);
   // Set brightness to a medium value
