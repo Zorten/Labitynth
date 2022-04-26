@@ -1,6 +1,7 @@
 
-#include "LEDMatrix.h"
-
+//#include "LEDMatrix.h"
+int buzzer = 6;
+/*
 void EvenCols(){
   digitalWrite(COL1, HIGH);
   digitalWrite(COL2, HIGH);
@@ -11,16 +12,18 @@ void EvenCols(){
   digitalWrite(COL7, HIGH);
   digitalWrite(COL8, HIGH);
 }
+*/
 
 
 void setup() {
   // put your setup code here, to run once:
-
+  pinMode(buzzer, OUTPUT);
   //Set LED Matrix to output
-  LEDSetup();
+  //LEDSetup();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  LightShow();
+  //LightShow();
+  tone(buzzer, 880);
 }
