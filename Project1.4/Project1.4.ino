@@ -19,9 +19,9 @@ int litUp = 0;
 //determine if level has been won
 bool levelWon = 0;
 //Keep track of current level
-int currLevel = 2;
+int currLevel = 1;
 //Number of total levels
-int maxLevel = 3;
+int maxLevel = 5;
 
 //Distinct frequencies to be played by buzzer
 const double D5_freq = 587.33;
