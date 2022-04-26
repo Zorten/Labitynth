@@ -18,8 +18,10 @@ int finalRow = 4;
 int litUp = 0;
 //determine if level has been won
 bool levelWon = 0;
+//Initial level
+int initLevel = 1;
 //Keep track of current level
-int currLevel = 1;
+int currLevel = initLevel;
 //Number of total levels
 int maxLevel = 5;
 
@@ -49,7 +51,7 @@ bool goDown = 0;
 //
 
 
-//===HELPING FUNCTIONS===//
+//===HELPER FUNCTIONS===//
 
 //  Function to display player in specified row and column
 void player(int row, int col){
@@ -190,58 +192,67 @@ void TickFct_LevelWon(){
      case LW_celebration:
         lc.clearDisplay(0);
         tone(buzzer, G5_freq);
-        lc.setRow(0,0,c1[0]);
-    lc.setRow(0,1,c1[1]);
-    lc.setRow(0,2,c1[2]);
-    lc.setRow(0,3,c1[3]);
-    lc.setRow(0,4,c1[4]);
-    lc.setRow(0,5,c1[5]);
-    lc.setRow(0,6,c1[6]);
-    lc.setRow(0,7,c1[7]);
-
-    delay(300);
-    
-    tone(buzzer, F5_freq);
-    lc.setRow(0,0,c2[0]);
-    lc.setRow(0,1,c2[1]);
-    lc.setRow(0,2,c2[2]);
-    lc.setRow(0,3,c2[3]);
-    lc.setRow(0,4,c2[4]);
-    lc.setRow(0,5,c2[5]);
-    lc.setRow(0,6,c2[6]);
-    lc.setRow(0,7,c2[7]);
-
-    delay(300);
-
-    tone(buzzer, D5_freq);
-    lc.setRow(0,0,c3[0]);
-    lc.setRow(0,1,c3[1]);
-    lc.setRow(0,2,c3[2]);
-    lc.setRow(0,3,c3[3]);
-    lc.setRow(0,4,c3[4]);
-    lc.setRow(0,5,c3[5]);
-    lc.setRow(0,6,c3[6]);
-    lc.setRow(0,7,c3[7]);
-
-    delay(300);
-
-    tone(buzzer, A5_freq);
-    lc.setRow(0,0,c4[0]);
-    lc.setRow(0,1,c4[1]);
-    lc.setRow(0,2,c4[2]);
-    lc.setRow(0,3,c4[3]);
-    lc.setRow(0,4,c4[4]);
-    lc.setRow(0,5,c4[5]);
-    lc.setRow(0,6,c4[6]);
-    lc.setRow(0,7,c4[7]);
-
-    delay(800);
-    noTone(buzzer);       
+        circle1();
+        delay(300);
+        lc.clearDisplay(0);
+        tone(buzzer, F5_freq);
+        circle2();
+        delay(300);
+        lc.clearDisplay(0);
+        tone(buzzer, D5_freq);
+        circle3();
+        delay(300);
+        lc.clearDisplay(0);
+        tone(buzzer, A5_freq);
+        circle4();
+        delay(800);
+        noTone(buzzer); 
+        lc.clearDisplay(0);      
         break;
      default:
         break;
   } // BM_state actions
- // return BM_state;
+}
+
+enum GameWon_States { GW_celebration } GW_state;
+void TickFct_GameWon(){
+  switch(GW_state) { // Transitions
+     case GW_celebration: // Initial transition
+        GW_state = GW_celebration;
+        break;
+        
+     default:
+        GW_state = GW_celebration;
+   } // Transitions
+
+  switch(GW_state) { // state actions
+     case GW_celebration:
+        lc.clearDisplay(0);
+        tone(buzzer, G5_freq);
+        charU();
+        delay(800);
+        lc.clearDisplay(0);
+        tone(buzzer, F5_freq);
+        charW();
+        delay(800);
+        lc.clearDisplay(0);
+        tone(buzzer, D5_freq);
+        charO();
+        delay(800);
+        lc.clearDisplay(0);
+        tone(buzzer, A5_freq);
+        charN();
+        delay(800);
+        lc.clearDisplay(0);
+        tone(buzzer, A5_freq);
+        happyFace();
+        delay(1000);
+        noTone(buzzer); 
+        lc.clearDisplay(0);      
+        break;
+     default:
+        break;
+  } //state actions
 }
 
 
@@ -279,17 +290,23 @@ void loop() {
     TickFct_ButtonMove();
   }
   else{
-    TickFct_LevelWon();
-    delay(500);
+    if (currLevel < maxLevel){
+      TickFct_LevelWon();
+      //delay(500);
+      levelWon = 0;
+      currRow = initRow;
+      currCol = initCol;
+      currLevel++;    
+    }
+    else if (currLevel == maxLevel){
+      TickFct_GameWon();
+      lc.clearDisplay(0);
+      currLevel = initLevel;
+    }
+
     levelWon = 0;
     currRow = initRow;
     currCol = initCol;
-    if (currLevel < maxLevel){
-      currLevel++;    
-    }
-    else{
-      currLevel = 1; 
-    } 
  
   }
 }
