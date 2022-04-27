@@ -16,7 +16,8 @@
  *  I acknowledge all content contained herein, excluding template, provided code, or example
  *  code, is my own original work.
  *  
- *  Demo Link <>
+ *  Demo Link: <>
+ *  GitHub Repo: <https://github.com/Zorten/Labitynth>
  */
 
 
