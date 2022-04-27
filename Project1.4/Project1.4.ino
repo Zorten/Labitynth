@@ -1,6 +1,35 @@
+/*  Author: Zergio Ruvalcaba
+ *  Lab Section: 21
+ *  Assignment: Project 1
+ *
+ *  Project Description: Welcome to Labitynth! This is an arcade-like game implemented
+ *  on the Arduino Uno, using an 8x8 LED Matrix with the MAX7219.
+ *  The objective of the game is to traverse the LED maze from left to right without touching the lit LEDs
+ *  or going out of bounds of the matrix. The player can move to the left, up, or down.
+ *  The player is represented by a rapidly blinking LED, while the exit the is represented 
+ *  by a slowly blinking LED. This version of the game has 5 levels.
+ *  The player is given 3 lives for the game. If the player does an invalid move, a life is taken. 
+ *  If the player ends up with no lives, the game restarts. If the player gets through all the levels
+ *  without loosing all their lives, they win the game and it restarts. 
+ *  To begin the game press any button.
+ *
+ *  I acknowledge all content contained herein, excluding template, provided code, or example
+ *  code, is my own original work.
+ *  
+ *  Demo Link <>
+ */
+
+
+
+
 //======HEADER FILES======//
+
+//I used this library to control my LED Matrix. Obtained from here: <https://www.arduino.cc/reference/en/libraries/ledcontrol/>
 #include "LedControl.h"
+
+//I created this header file to hold values and functions that would clutter this code
 #include "Levels.h"
+
 //======HEADER FILES END======//
 
 //======VARIABLES======//
@@ -24,7 +53,7 @@ int litUp = 0;
 bool levelWon = 0;
 
 //initial level
-int initLevel = 5;
+int initLevel = 1;
 
 //keep track of current level
 int currLevel = initLevel;
@@ -69,19 +98,20 @@ int lives = 3;
 //total number of lives
 int maxLives = 3;
 
-//flag to see if wrong/correct move was made
+//flags to see if wrong/correct move was made
 bool wrongMove = 0;
 bool validMove = 0;
 
-//to keep track of ticks in one function
+//used to determine when to toggle exit LED
 int loops = 5;
 
-//used to blink an LED
+//used to blink exit LED
 int toggle = 1;
 
 //to keep track of menu Display
 int circleUp = 1;
 int circleDown = 4;
+
 //determine if game should start
 bool gameStart = 0;
 
@@ -113,11 +143,12 @@ void player(int row, int col){
 
 //This state machine will wait for and capture
 //user input on the Menu and then begin the game
+//If no input, the state machine will display a light show on the matrix
 enum Menu_states { Menu_waitPress, Menu_waitRelease, Menu_start} Menu_state;
 void TickFct_Menu(){
   switch(Menu_state) { // Transitions
         
-     case Menu_waitPress: // Initial transition - wait for user to press Menu
+     case Menu_waitPress: // Initial transition - wait for user to press button
         if ((digitalRead(right) == LOW) && (digitalRead(up) == LOW) && (digitalRead(down) == LOW) ){
           Menu_state = Menu_waitPress;  
         }
@@ -129,7 +160,7 @@ void TickFct_Menu(){
         }
         break;
         
-     case Menu_waitRelease: //wait for user to release Menu
+     case Menu_waitRelease: //wait for user to release button
         if ((digitalRead(right) == HIGH) || (digitalRead(up) == HIGH) || (digitalRead(down) == HIGH)){
           Menu_state = Menu_waitRelease;  
         }
@@ -139,7 +170,7 @@ void TickFct_Menu(){
 
         break;
 
-     case Menu_start: 
+     case Menu_start: //after veryfing press, go back to waiting for input
         Menu_state = Menu_waitPress;
         
      default:
@@ -147,6 +178,7 @@ void TickFct_Menu(){
    } // Transitions
 
   switch(Menu_state) { // state actions
+     //display light show while no input
      case Menu_waitPress:
         if (circleUp <= 4 ){
           circles(circleUp);
@@ -165,9 +197,12 @@ void TickFct_Menu(){
         break;
 
      case Menu_waitRelease:
+        //clear display after button to start has been pressed
         lc.clearDisplay(0);
         break;
-     case Menu_start: //check which Menu was pressed and respond accordingly
+        
+     case Menu_start:
+        //set flag to begin game
         gameStart = 1;
         tone(buzzer, F5_freq); 
         delay(50);
@@ -249,20 +284,20 @@ void TickFct_ButtonMove(){
           //litUp is 1 if the LED you're trying to move to is on
           litUp = lc.getLed(currRow - moveUp, currCol);
           //if the LED is on or if it is out of bounds, 
-          //move player to starting position and take a life
+          //move player to starting position and mark a wrong move
           if (litUp || ((currRow - moveUp) < 0)){
             currCol = initCol;
             currRow = initRow;
             wrongMove = 1;
             
           }
-          //otherwise move player to specified spot
+          //otherwise move player to specified spot and mark a valid move
           else{
             currCol = currCol;
             currRow = currRow - moveUp;
             validMove = 1;  
           }
-          goUp = 0;
+          goUp = 0; //reset flag
         }
         else if (goRight){
           litUp = lc.getLed(currRow, currCol + moveRight);
@@ -293,7 +328,7 @@ void TickFct_ButtonMove(){
           goDown = 0;
         }    
 
-        if (wrongMove){
+        if (wrongMove){ //take a life and play tune to indicate invalid move
           wrongMove = 0;
           lives--;
           tone(buzzer, F5_freq);
@@ -303,7 +338,7 @@ void TickFct_ButtonMove(){
           noTone(buzzer);  
         }
 
-        if (validMove){
+        if (validMove){ //play a tune when valid move is made
           validMove = 0;
           tone(buzzer, F5_freq); 
           delay(50);
@@ -320,7 +355,6 @@ void TickFct_ButtonMove(){
         //and return player to starting positon
         if ((currRow == finalRow) && (currCol == finalCol)){
           levelWon = 1; 
-          player(currRow, currCol); 
         }
         break;
      default:
@@ -369,7 +403,7 @@ void TickFct_LevelWon(){
   } // BM_state actions
 }
 
-//This function shows a message telling the user he won
+//This function shows a message telling the user they won and plays a tune
 enum GameWon_States { GW_celebration } GW_state;
 void TickFct_GameWon(){
   switch(GW_state) { // Transitions
@@ -411,7 +445,7 @@ void TickFct_GameWon(){
   } //state actions
 }
 
-//This function shows a message telling the user he won
+//This function tells the user they lost, and plays a tune
 enum GameLost_States { GL_lost } GL_state;
 void TickFct_GameLost(){
   switch(GL_state) { // Transitions
@@ -459,14 +493,15 @@ void TickFct_GameLost(){
 void setup() {
   // put your setup code here, to run once:
   //Serial.begin(9600);
+  
   // Make sure display is not in shutdown mode
   lc.shutdown(0,false);
-  // Set brightness to a medium value
+  
+  // Set brightness to a low value to minimize power consumption
   lc.setIntensity(0,3);
+  
   // Clear the display
   lc.clearDisplay(0); 
-
-  gameStart = 0;
 
   // Set Buttons as INPUT
   pinMode(up, INPUT);
@@ -490,25 +525,30 @@ void setup() {
 //======LOOP======//
 void loop() {
   // put your main code here, to run repeatedly:
+
+  //run menu function as long as game hasn't started (no input)
   if (!gameStart){
     TickFct_Menu();  
   }
   else{
+    //as long as the game is not over, iterate over the levels 
     if (!gameOver){
       if (!levelWon){
+        //as long as level isn't won, call ButtonMove function and adjust position  
         levels(currLevel);
-        player(currRow, currCol);
         TickFct_ButtonMove();
+        player(currRow, currCol);
       }
       else{
+        //if not final level, move on to next level and update postion
         if (currLevel < maxLevel){
           TickFct_LevelWon();
-          //delay(500);
           levelWon = 0;
           currRow = initRow;
           currCol = initCol;
           currLevel++;    
         }
+        //if final level passed, display winning message and end game
         else if (currLevel == maxLevel){
           TickFct_LevelWon();
           delay(250);
@@ -518,13 +558,15 @@ void loop() {
           currLevel = initLevel;
           gameStart = 0;
         }
-    
+
+        //update variables
         levelWon = 0;
         currRow = initRow;
         currCol = initCol;
       }
     }
     else{
+      //if game is lost, update variables to restart and display losing message
       gameOver = 0;
       lives = 3;
       currLevel = initLevel;
