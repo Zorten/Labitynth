@@ -1,6 +1,4 @@
 /*  Author: Zergio Ruvalcaba
- *  Lab Section: 21
- *  Assignment: Project 1
  *
  *  Project Description: Welcome to Labitynth! This is an arcade-like game implemented
  *  on the Arduino Uno, using an 8x8 LED Matrix with the MAX7219.
@@ -16,7 +14,7 @@
  *  I acknowledge all content contained herein, excluding template, provided code, or example
  *  code, is my own original work.
  *  
- *  Demo Link: <>
+ *  Demo Link: <https://www.youtube.com/watch?v=xra1I5b9nbM>
  *  GitHub Repo: <https://github.com/Zorten/Labitynth>
  */
 
@@ -558,6 +556,7 @@ void loop() {
           lc.clearDisplay(0);
           currLevel = initLevel;
           gameStart = 0;
+          lives = 3;
         }
 
         //update variables
